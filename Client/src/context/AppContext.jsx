@@ -32,13 +32,6 @@ export const AppProvider = ({ children }) => {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
-  // Set up interval refresh (every 60 seconds)
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      refreshData();
-    }, 60000); // 60 seconds
-    return () => clearInterval(intervalId);
-  }, [refreshData]);
 
   const handleRoleSelect = (role) => {
     setUserRole(role);

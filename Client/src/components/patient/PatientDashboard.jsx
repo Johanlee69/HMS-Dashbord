@@ -181,7 +181,7 @@ const PatientDashboard = ({ activeTab: initialActiveTab = 'patients' }) => {
             </div>
 
             {/* Tabs Navigation */}
-            <div className="border-b border-gray-200 mb-4">
+            <div className="border-b border-gray-200 mb-4 overflow-x-auto scrollbar-hide">
               <nav className="flex -mb-px">
                 <button
                   className={`mr-8 py-4 px-1 cursor-pointer font-medium ${
