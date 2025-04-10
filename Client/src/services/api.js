@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// Create axios instance with base URL and longer timeout
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  timeout: 15000, // 15 seconds timeout
+  baseURL: 'https://hms-dashbord.onrender.com/api',
+  timeout: 15000, 
   headers: {
     'Content-Type': 'application/json',
   },
