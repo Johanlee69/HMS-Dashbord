@@ -1,6 +1,6 @@
 const StatCard = ({ title, value, icon, color, subtitle }) => {
   return (
-    <div className={`card border-l-4 ${color} hover:shadow-lg transition-shadow cursor-pointer bg-blue-300/40 rounded-md p-2`}>
+    <div className={`card border-l-4 ${color} hover:shadow-lg transition-shadow cursor-pointer bg-blue-300/30 backdrop-blur-xl rounded-md p-2`}>
       <div className="flex justify-between ml-[3%]">
         <div>
           <h3 className="text-lg font-medium text-gray-500">{title}</h3>

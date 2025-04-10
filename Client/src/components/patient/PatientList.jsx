@@ -20,7 +20,6 @@ const PatientList = ({ standalone = false }) => {
       setPatients(response.data || []);
     } catch (error) {
       console.error('Error fetching patients:', error);
-      // Only show error toast if it's a server/network error, not for empty data
       if (error.response && error.response.status !== 404) {
         setError('Failed to load patient data. Please try again.');
       }
@@ -157,7 +156,7 @@ const PatientList = ({ standalone = false }) => {
 
   if (standalone) {
     return (
-      <DashboardLayout dashboardType="patient">
+      <DashboardLayout dashboardType="patient" style={{ scrollbarwidth : 'none'}}>
         {component}
       </DashboardLayout>
     );

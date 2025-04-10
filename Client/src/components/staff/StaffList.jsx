@@ -115,7 +115,7 @@ const StaffList = ({ standalone = false }) => {
           </select>
           <button
             onClick={() => navigate('/dashboard/doctor/new')}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
             <FaUserPlus />
             <span>Add Staff</span>
@@ -125,7 +125,7 @@ const StaffList = ({ standalone = false }) => {
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64">

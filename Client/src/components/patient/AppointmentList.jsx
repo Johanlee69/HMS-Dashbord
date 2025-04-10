@@ -4,7 +4,7 @@ import { FaSearch, FaCalendarTimes, FaCheck, FaCalendarPlus, FaUserTimes } from 
 import { toast } from 'react-toastify';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { PatientAPI } from '../../services/api';
-
+import AppointmentCalendar from '../common/AppointmentCalendar';
 const AppointmentList = ({ standalone = false }) => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
@@ -141,7 +141,9 @@ const AppointmentList = ({ standalone = false }) => {
           </button>
         </div>
       </div>
-      
+      <div className='mb-4'>
+            <AppointmentCalendar appointments={appointments} />
+    </div>
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

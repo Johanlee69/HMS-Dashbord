@@ -1,39 +1,47 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaEdit, FaFileAlt, FaCheckCircle, FaTimesCircle, FaPlus, FaTrash } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaFileAlt, FaCheckCircle, FaTimesCircle, FaPlus, FaTrash, FaFilePdf } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FinanceAPI } from '../../services/api';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import LoadingSpinner from '../common/LoadingSpinner';
 
-const InsuranceClaimsList = ({ standalone = false }) => {
+const InsuranceClaimsList = ({ standalone = false, claims: propClaims, refreshTrigger }) => {
   const navigate = useNavigate();
-  const [claims, setClaims] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [claims, setClaims] = useState(propClaims || []);
+  const [loading, setLoading] = useState(!propClaims);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   
   useEffect(() => {
-    const fetchClaims = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await FinanceAPI.getAllInsuranceClaims();
-        setClaims(response.data || []);
-      } catch (error) {
-        console.error('Error fetching insurance claims:', error);
-        // Only show error toast if it's a server/network error, not for empty data
-        if (error.response && error.response.status !== 404) {
-          toast.error('Error loading insurance claims data');
-          setError('Failed to load insurance claims data. Please try again later.');
-        }
-      } finally {
-        setLoading(false);
+    if (propClaims && propClaims.length > 0) {
+      setClaims(propClaims);
+      setLoading(false);
+    } else {
+      fetchClaims();
+    }
+  }, [propClaims, refreshTrigger]);
+  
+  const fetchClaims = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await FinanceAPI.getAllInsuranceClaims();
+      setClaims(response.data || []);
+    } catch (error) {
+      console.error('Error fetching insurance claims:', error);
+      // Only show error toast if it's a server/network error, not for empty data
+      if (error.response && error.response.status !== 404) {
+        toast.error('Error loading insurance claims data');
+        setError('Failed to load insurance claims data. Please try again later.');
       }
-    };
-    
-    fetchClaims();
-  }, []);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const filteredClaims = claims && claims.length ? claims.filter(claim => {
     const matchesSearch = 
@@ -149,6 +157,177 @@ const InsuranceClaimsList = ({ standalone = false }) => {
     }
   };
   
+  const handleGenerateClaimPDF = (claim) => {
+    if (!claim) return;
+    
+    try {
+      
+      // Create a new jsPDF instance
+      const doc = new jsPDF();
+      const hospitalName = 'Hospital Management System';
+      const documentTitle = 'INSURANCE CLAIM';
+      const date = new Date().toLocaleDateString();
+      
+      // Add hospital name and logo
+      doc.setFontSize(20);
+      doc.setTextColor(0, 51, 102);
+      doc.text(hospitalName, 105, 15, { align: 'center' });
+      
+      // Add document title
+      doc.setFontSize(24);
+      doc.setTextColor(0, 0, 0);
+      doc.text(documentTitle, 105, 30, { align: 'center' });
+      
+      // Add document details
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      
+      // Left side - Hospital details
+      doc.text('Rekha Hospital', 14, 50);
+      doc.text('123 Medical Center Road', 14, 55);
+      doc.text('Healthcare City, HC 12345', 14, 60);
+      doc.text('Phone: (123) 456-7890', 14, 65);
+      doc.text('Email: Rekha@hms.com', 14, 70);
+      
+      // Right side - Claim details
+      doc.text(`Claim ID: #${claim._id?.substring(0, 8) || '00000000'}`, 140, 50);
+      doc.text(`Date: ${date}`, 140, 55);
+      doc.text(`Submission Date: ${new Date(claim.submissionDate || Date.now()).toLocaleDateString()}`, 140, 60);
+      doc.text(`Status: ${claim.status || 'Submitted'}`, 140, 65);
+      
+      // Patient information
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, 80, 182, 25, 'F');
+      doc.setFontSize(12);
+      doc.setTextColor(0, 51, 102);
+      doc.text('Patient Information', 14, 87);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      const patientName = claim.patient?.name || 'Unknown';
+      doc.text(`Patient: ${patientName}`, 14, 95);
+      doc.text(`Patient ID: ${claim.patient?._id || 'Unknown'}`, 14, 100);
+      
+      // Insurance information
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, 110, 182, 30, 'F');
+      doc.setFontSize(12);
+      doc.setTextColor(0, 51, 102);
+      doc.text('Insurance Information', 14, 117);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.text(`Insurance Provider: ${claim.insuranceProvider || 'Unknown'}`, 14, 125);
+      doc.text(`Policy Number: ${claim.policyNumber || 'N/A'}`, 14, 130);
+      doc.text(`Insurance Contact: ${claim.insuranceContact || 'N/A'}`, 120, 125);
+      doc.text(`Group Number: ${claim.groupNumber || 'N/A'}`, 120, 130);
+      
+      // Claim details
+      doc.setFontSize(14);
+      doc.setTextColor(0, 51, 102);
+      doc.text('Claim Details', 14, 150);
+      
+      // Prepare claim details
+      const claimItems = [
+        ['Treatment/Service', claim.serviceDescription || 'Medical Service'],
+        ['Diagnosis Code', claim.diagnosisCode || 'N/A'],
+        ['Treatment Date', new Date(claim.treatmentDate || Date.now()).toLocaleDateString()],
+        ['Treatment Provider', claim.treatmentProvider || 'Hospital Staff'],
+        ['Claim Amount', `₹${parseFloat(claim.claimAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`]
+      ];
+      
+      if (claim.status === 'Approved' || claim.status === 'Partially Approved') {
+        claimItems.push(['Approved Amount', `₹${parseFloat(claim.approvedAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`]);
+      }
+      
+      // Add claim details table
+      autoTable(doc, {
+        startY: 155,
+        head: [['Item', 'Details']],
+        body: claimItems,
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [0, 51, 102],
+          textColor: [255, 255, 255]
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240]
+        }
+      });
+      
+      // Status information
+      const finalY = doc.lastAutoTable.finalY || 200;
+      
+      doc.setFontSize(14);
+      doc.setTextColor(0, 51, 102);
+      doc.text('Current Status', 14, finalY + 20);
+      
+      // Status details
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      let statusColor;
+      switch (claim.status) {
+        case 'Approved':
+          statusColor = [0, 128, 0]; // Green
+          break;
+        case 'Rejected':
+          statusColor = [255, 0, 0]; // Red
+          break;
+        case 'Partially Approved':
+          statusColor = [128, 0, 128]; // Purple
+          break;
+        case 'In Process':
+          statusColor = [0, 0, 255]; // Blue
+          break;
+        default:
+          statusColor = [0, 0, 0]; // Black
+      }
+      
+      doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+      doc.setFontSize(14);
+      doc.text(`Status: ${claim.status || 'Submitted'}`, 14, finalY + 30);
+      
+      if (claim.comments) {
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.text('Comments:', 14, finalY + 40);
+        
+        const splitComments = doc.splitTextToSize(claim.comments, 180);
+        doc.text(splitComments, 14, finalY + 50);
+      }
+      
+      // Declaration
+      const declarationY = claim.comments ? finalY + 70 : finalY + 50;
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, declarationY, 182, 30, 'F');
+      
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      doc.text('Declaration', 14, declarationY + 10);
+      doc.setFontSize(10);
+      const declaration = 'I hereby certify that the information provided in this claim is true and accurate to the best of my knowledge. I authorize the release of any medical or other information necessary to process this claim.';
+      const splitDeclaration = doc.splitTextToSize(declaration, 170);
+      doc.text(splitDeclaration, 14, declarationY + 20);
+      
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        doc.text('© Rekha Hospital', 105, doc.internal.pageSize.height - 5, { align: 'center' });
+      }
+      
+      // Save the PDF
+      doc.save(`Insurance_Claim_${claim._id?.substring(0, 8) || '00000000'}.pdf`);
+      
+      toast.success('Claim document downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating claim document:', error);
+      toast.error('Failed to generate claim document PDF. Please try again.');
+    }
+  };
+  
   const component = (
     <div className="p-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
@@ -178,7 +357,7 @@ const InsuranceClaimsList = ({ standalone = false }) => {
           </select>
           <button
             onClick={() => navigate('/dashboard/admin/insurance/new')}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
             <FaPlus />
             <span>New Claim</span>
@@ -214,7 +393,7 @@ const InsuranceClaimsList = ({ standalone = false }) => {
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          <LoadingSpinner />
         </div>
       ) : error ? (
         <div className="flex justify-center items-center h-64">
@@ -266,11 +445,11 @@ const InsuranceClaimsList = ({ standalone = false }) => {
                           <FaEdit size={16} />
                         </button>
                         <button
-                          className="text-purple-600 hover:text-purple-900 cursor-pointer"
-                          title="View Documents"
-                          onClick={() => handleViewDocuments(claim)}
+                          className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                          title="Generate Claim PDF"
+                          onClick={() => handleGenerateClaimPDF(claim)}
                         >
-                          <FaFileAlt size={16} />
+                          <FaFilePdf size={16} />
                         </button>
                         {(claim.status === 'In Process' || claim.status === 'Submitted') && (
                           <>

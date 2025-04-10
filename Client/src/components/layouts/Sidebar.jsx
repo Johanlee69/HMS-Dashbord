@@ -2,7 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   FaHome, FaUsers, FaCalendarAlt, FaBed, FaUserMd, 
   FaFileMedical, FaFileInvoiceDollar, FaChartLine, 
-  FaSignOutAlt, FaUserPlus, FaClipboardList
+  FaSignOutAlt, FaUserPlus, FaClipboardList,
+  FaUserCog, FaCalendarCheck
 } from 'react-icons/fa';
 import { useAppContext } from '../../context/AppContext';
 import { IoMdClose } from "react-icons/io";
@@ -25,6 +26,8 @@ const Sidebar = ({ dashboardType }) => {
   } else if (dashboardType === 'doctor') {
     navItems = [
       { path: '/dashboard/doctor', name: 'Overview', icon: <FaHome /> },
+      { path: '/dashboard/doctor/roster', name: 'Staff Roster', icon: <FaUserMd /> },
+      { path: '/dashboard/doctor/attendance', name: 'Attendance', icon: <FaCalendarCheck /> },
       { path: '/dashboard/doctor/new', name: 'Add Staff', icon: <FaUserPlus /> },
     ];
   } else if (dashboardType === 'admin') {
@@ -37,11 +40,19 @@ const Sidebar = ({ dashboardType }) => {
     ];
   }
 
+  // Get the dashboard title
+  const getDashboardTitle = () => {
+    if (dashboardType === 'admin') {
+      return 'Finance Dashboard';
+    }
+    return `${dashboardType.charAt(0).toUpperCase() + dashboardType.slice(1)} Dashboard`;
+  };
+
   return (
-    <div className={`bg-blue-900/20 shadow-sm w-64 min-h-screen flex-shrink-0 flex flex-col ${sideBar ? 'block' : 'hidden'}`}>
+    <div className={`bg-blue-900/10 backdrop-blur-sm a  z-10 shadow-sm w-64 min-h-screen absolute flex-shrink-0 flex flex-col ${sideBar ? 'left-0' : '-left-100'} transition-all duration-200`}>
       <div className="p-4 flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-800">
-          {dashboardType.charAt(0).toUpperCase() + dashboardType.slice(1)} Dashboard
+          {getDashboardTitle()}
         </h2>
         <div className='flex items-center justify-end'>
           <IoMdClose className='text-black scale-[150%] cursor-pointer' onClick={() => setSideBar(!sideBar)} />
@@ -70,7 +81,7 @@ const Sidebar = ({ dashboardType }) => {
         <Link 
           to="/" 
           onClick={handleLogout}
-          className="text-white/80 hover:text-white flex items-center bg-blue-500 p-2 rounded-md w-full"
+          className="text-white/80 hover:text-white flex items-center bg-blue-700 p-2 rounded-md w-full"
         >
           <FaSignOutAlt className="mr-2" /> Change Dashboard
         </Link>

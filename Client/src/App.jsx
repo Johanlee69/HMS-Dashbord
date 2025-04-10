@@ -111,12 +111,17 @@ function AppRoutes() {
       } />
       <Route path="/dashboard/doctor/roster" element={
         <ProtectedRoute requiredRole="doctor">
-          <StaffList standalone={true} />
+          <StaffDashboard activeTab="staff" />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard/doctor/records" element={
+        <ProtectedRoute requiredRole="doctor">
+          <StaffDashboard activeTab="records" />
         </ProtectedRoute>
       } />
       <Route path="/dashboard/doctor/attendance" element={
         <ProtectedRoute requiredRole="doctor">
-          <AttendanceTracker standalone={true} />
+          <StaffDashboard activeTab="attendance" />
         </ProtectedRoute>
       } />
       <Route path="/dashboard/doctor/attendance/record" element={

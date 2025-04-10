@@ -4,6 +4,8 @@ import { FaSearch, FaEdit, FaFileInvoice, FaCreditCard, FaTrash, FaPlus } from '
 import { toast } from 'react-toastify';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { FinanceAPI } from '../../services/api';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const BillingList = ({ standalone = false }) => {
   const navigate = useNavigate();
@@ -75,8 +77,143 @@ const BillingList = ({ standalone = false }) => {
   };
   
   const handlePrintInvoice = (bill) => {
-    // In a real application, this would generate a PDF or redirect to a print view
-    toast.info(`Preparing invoice for ${bill.patient?.name || 'Unknown Patient'}`);
+    if (!bill) return;
+    
+    try {
+    
+      
+      // Create a new jsPDF instance
+      const doc = new jsPDF();
+      const hospitalName = 'Hospital Management System';
+      const invoiceTitle = 'INVOICE';
+      const date = new Date().toLocaleDateString();
+      
+      // Add hospital name and logo
+      doc.setFontSize(20);
+      doc.setTextColor(0, 51, 102);
+      doc.text(hospitalName, 105, 15, { align: 'center' });
+      
+      // Add invoice title
+      doc.setFontSize(24);
+      doc.setTextColor(0, 0, 0);
+      doc.text(invoiceTitle, 105, 30, { align: 'center' });
+      
+      // Add invoice details
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      
+      // Left side - Hospital details
+      doc.text('Rekha Hospital', 14, 50);
+      doc.text('123 Medical Center Road', 14, 55);
+      doc.text('Healthcare City, HC 12345', 14, 60);
+      doc.text('Phone: (123) 456-7890', 14, 65);
+      doc.text('Email: Rekha@hms.com', 14, 70);
+      
+      doc.text(`Invoice No: INV-${bill._id?.substring(0, 8) || '00000000'}`, 140, 50);
+      doc.text(`Date: ${date}`, 140, 55);
+      doc.text(`Bill Date: ${new Date(bill.billDate).toLocaleDateString()}`, 140, 60);
+      doc.text(`Status: ${bill.paymentStatus || 'Pending'}`, 140, 65);
+      
+      // Patient information
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, 80, 182, 25, 'F');
+      doc.setFontSize(12);
+      doc.setTextColor(0, 51, 102);
+      doc.text('Patient Information', 14, 87);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.text(`Patient: ${bill.patientName || 'Unknown'}`, 14, 95);
+      doc.text(`Patient ID: ${bill.patientId || 'Unknown'}`, 14, 100);
+      
+      // Bill details
+      doc.setFontSize(14);
+      doc.setTextColor(0, 51, 102);
+      doc.text('Bill Details', 14, 115);
+      
+      // Prepare bill items
+      const billItems = [
+        [bill.purpose || 'Medical Service', '1', `₹${parseFloat(bill.totalAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`]
+      ];
+      
+      // Add detailed items if available
+      if (bill.items && Array.isArray(bill.items)) {
+        billItems.length = 0; // Clear the generic entry
+        bill.items.forEach(item => {
+          billItems.push([
+            item.description || 'Medical Service',
+            item.quantity || '1',
+            `₹${parseFloat(item.amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+          ]);
+        });
+      }
+      
+      // Use autoTable as a function with doc as first argument instead of as a method
+      autoTable(doc, {
+        startY: 120,
+        head: [['Description', 'Quantity', 'Amount']],
+        body: billItems,
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [0, 51, 102],
+          textColor: [255, 255, 255]
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240]
+        }
+      });
+      
+      // Add payment summary
+      const finalY = doc.lastAutoTable.finalY || 150;
+      
+      // Add total amount
+      doc.setFillColor(240, 240, 240);
+      doc.rect(120, finalY + 10, 76, 50, 'F');
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Total Amount:', 125, finalY + 20);
+      doc.text(`₹${parseFloat(bill.totalAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 180, finalY + 20, { align: 'right' });
+      
+      doc.text('Amount Paid:', 125, finalY + 30);
+      doc.text(`₹${parseFloat(bill.paidAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 180, finalY + 30, { align: 'right' });
+      
+      const balance = parseFloat(bill.totalAmount || 0) - parseFloat(bill.paidAmount || 0);
+      
+      doc.setTextColor(balance > 0 ? 255 : 0, 0, balance > 0 ? 0 : 0);
+      doc.setFontSize(13);
+      doc.text('Balance Due:', 125, finalY + 40);
+      doc.text(`₹${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 180, finalY + 40, { align: 'right' });
+      
+      // Payment instructions
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.text('Payment Instructions:', 14, finalY + 70);
+      doc.text('1. Please make payment within 30 days.', 14, finalY + 80);
+      doc.text('2. Payment can be made by cash, check, or online transfer.', 14, finalY + 85);
+      doc.text('3. For questions regarding this invoice, contact our billing department.', 14, finalY + 90);
+      
+      // Thank you note
+      doc.setTextColor(0, 51, 102);
+      doc.setFontSize(12);
+      doc.text('Thank you for choosing Rekha Hospital', 105, finalY + 105, { align: 'center' });
+
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+        doc.text('© Hospital Management System', 105, doc.internal.pageSize.height - 5, { align: 'center' });
+      }
+      
+      // Save the PDF
+      doc.save(`Invoice_${bill._id?.substring(0, 8) || '00000000'}.pdf`);
+      toast.success('Invoice downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      toast.error('Failed to generate invoice PDF. Please make sure all required libraries are loaded.');
+    }
   };
   
   const handleRecordPayment = async (bill) => {
@@ -197,7 +334,7 @@ const BillingList = ({ standalone = false }) => {
           </select>
           <button
             onClick={() => navigate('/dashboard/admin/bills/new')}
-            className="flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
             <FaPlus />
             <span>Create Bill</span>

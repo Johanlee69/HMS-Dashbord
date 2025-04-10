@@ -1,3 +1,100 @@
 @import "tailwindcss";
 @tailwind utilities;
 
+/* Global Styles */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Hide scrollbars but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b0bec5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #90a4ae;
+}
+
+/* React Calendar Customization */
+.react-calendar {
+  width: 100%;
+  border: none;
+  border-radius: 0.5rem;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 15px;
+}
+
+.react-calendar__tile {
+  padding: 1rem 0.5rem;
+  position: relative;
+}
+
+.react-calendar__tile--now {
+  background: rgba(219, 234, 254, 0.7);
+}
+
+.react-calendar__tile--now:hover {
+  background: rgba(219, 234, 254, 0.9);
+}
+
+.react-calendar__tile--active {
+  background: rgba(59, 130, 246, 0.9) !important;
+  color: white;
+}
+
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: rgba(37, 99, 235, 1) !important;
+}
+
+.react-calendar__tile.has-appointments {
+  font-weight: bold;
+}
+
+.react-calendar__navigation {
+  height: 40px;
+  margin-bottom: 0.5rem;
+}
+
+.react-calendar__navigation button {
+  border-radius: 0.25rem;
+}
+
+.react-calendar__navigation button:hover {
+  background-color: rgba(219, 234, 254, 0.7);
+}
+
+.calendar-container {
+  box-shadow: none;
+  padding: 0;
+}

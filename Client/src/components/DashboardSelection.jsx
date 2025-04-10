@@ -25,7 +25,7 @@ const DashboardSelection = () => {
     },
     {
       id: 'admin',
-      name: 'Admin Dashboard',
+      name: 'Finance Dashboard',
       description: 'Oversee finances, billing, and insurance claims',
       icon: <FaUserCog size={32} />,
       color: 'bg-purple-50 border-purple-200 hover:bg-purple-100',
